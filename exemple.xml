@@ -1,0 +1,7 @@
+<doc farm = "456"> 
+    <i species = "lapin" sex = "male" >John</i>
+    <i species = "chien"><sub subspec = "Kooikerhondje">Tristan</sub></i>
+    <i species = "cheval">
+        <count>1.1</count>
+    </i>
+</doc>
