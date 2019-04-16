@@ -1,12 +1,23 @@
-from xml_file_reader import XMLFileReader
 import gzip
 import zlib
-#from collections import defaultdict
-from parsers import *
+import io
+from ssxtd import parsers
 
 import time
 
-my_file = "exemple.xml"
+my_file = io.StringIO('''<doc farm = "456"> 
+    <i species = "lapin" sex = "male" >John</i>
+    <i species = "chien"><sub subspec = "Kooikerhondje">Tristan</sub></i>
+    <i species = "cheval">
+        <count>1.1</count>
+    </i>
+	<i>
+        <month>11</month>
+        <year>2011</year>
+        <day>1</day>
+    </i>
+</doc>
+''')
 
 my_compression=None
 
@@ -35,19 +46,11 @@ def ip(path, k):
                         return r
         return None
 
-        
-
-def xmltodict(compression):
-    if compression=="gzip":
-        yield from XMLFileReader(my_file,compression=XMLFileReader.GZIP,  to_int=False).read()
-    else:         
-        yield from XMLFileReader(my_file,  to_int=False).read()
-
 
 print("lxml_parse :")
 count=0
 start = time.time()
-for i in lxml_parse(my_file, depth=2, compression=my_compression, object_processor=ip ):
+for i in parsers.lxml_parse(my_file, depth=2, compression=my_compression, object_processor=ip ):
     count+=1
     #print(i)
 end = time.time()
@@ -57,7 +60,7 @@ print(str(count) + " entrées traitées\n\n")
 print("lxml_iterparse :")
 count=0
 start = time.time()
-for i in lxml_iterparse(my_file, depth=2, compression=my_compression, object_processor=ip):
+for i in parsers.lxml_iterparse(my_file, depth=2, compression=my_compression, object_processor=ip):
     count+=1
     # print("RETOUR")
     #print(i)
@@ -67,19 +70,9 @@ print(end - start)
 print(str(count) + " entrées traitées\n\n")
 
 count=0
-print("xmltodict :")
-start = time.time()
-for i in xmltodict(compression=my_compression):
-    count+=1
-    # print(i)
-end = time.time()
-print(end - start)
-print(str(count) + " entrées traitées\n\n")
-
-count=0
 print("xml_parse :")
 start = time.time()
-for i in xml_parse(my_file, depth=2, compression=my_compression):
+for i in parsers.xml_parse(my_file, depth=2, compression=my_compression):
     count+=1
     # print(i)
 end = time.time()
@@ -89,9 +82,20 @@ print(str(count) + " entrées traitées\n\n")
 count = 0
 print("xml_iterparse :")
 start = time.time()
-for i in xml_iterparse(my_file, depth=2, compression=my_compression):
+for i in parsers.xml_iterparse(my_file, depth=2, compression=my_compression):
     count += 1
     # print(i)
 end = time.time()
 print(end - start)
 print(str(count) + " entrées traitées\n\n")
+
+# # with xmltodict 
+# count=0
+# print("xmltodict :")
+# start = time.time()
+# for i in xmltodict(compression=my_compression):
+#     count+=1
+#     # print(i)
+# end = time.time()
+# print(end - start)
+# print(str(count) + " entrées traitées\n\n")
