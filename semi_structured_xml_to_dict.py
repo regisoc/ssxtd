@@ -2,18 +2,16 @@ class DictBuilder:
     """Generic element structure builder.
     This builder converts a sequence of start, data, and end method
     calls to a well-formed element structure.
-    You can use this class to build an element structure using a custom XML
-    parser, or a parser for some other XML-like format.
-    *element_factory* is an optional element factory which is called
-    to create new Element instances, as necessary.
     """
-    def __init__(self, trim_spaces=False, to_int = True, to_float=True):
+    def __init__(self, trim_spaces=False, to_int = True, to_float=True, value_processor=None, object_processor=None):
         self.dict = {}
         self.path = []
         self.leaf = {}
         self.trim_spaces = trim_spaces
         self.to_int = to_int
         self.to_float = to_float
+        self.object_processor = object_processor
+        self.value_processor = self.try_conversion
 
 
     def getLeaf(self):
@@ -52,6 +50,7 @@ class DictBuilder:
 
     def close(self):
         root = self.dict["#alldata"][0]
+        self.path2=[]
         self.clean(root)
         return root
 
@@ -90,6 +89,8 @@ class DictBuilder:
                 r=r+self.merge_tag_text(i)
         elif isinstance(o, str):
             r=r+o
+        elif isinstance(o, (int, float)):
+            r=r+str(o)
         elif isinstance(o, dict):
             if o.get("#alldata") is None:
                 for v in o.values():
@@ -103,7 +104,7 @@ class DictBuilder:
 
         if t is None:
             d[k]=v
-        elif isinstance(t, (str, dict)):
+        elif isinstance(t, (int, float, str, dict)):
             d[k] = [d[k],v]
         elif isinstance(t, list):
             t.append(v)
@@ -134,6 +135,7 @@ class DictBuilder:
         '''
         
         k = next(iter(d)) # k='i'
+        self.path2.append(k)
 
         has_attrs=False
         for i in d[k]:
@@ -152,25 +154,37 @@ class DictBuilder:
                 n_text+=1
 
         if n_text == 1 and n_tag == 0: # if ['oui']
+            r = self.value_processor(l[0])
             if has_attrs:
-                d[k]["#text"]=l[0]
+                d[k]["#text"]=r
                 d[k].pop("#alldata", None)
             else:
-                r = self.try_conversion(l[0])
+                
                 d[k]=r
         
         elif n_tag != 0 and n_text ==0: # if [{'content1': {'#alldata': ...}}, {'content2': {'#alldata': ...}}]
-            if has_attrs:
-                for key,val in d[k].items():
-                    if key != "#alldata":
-                        l.append({key:  {'#alldata': [val]}})
-            d[k]=self.merge_tag(l)
 
+            r=None
+            if self.object_processor is not None:
+                r = self.object_processor(self.path2,d[k])
+                if r is not None:
+                    d[k]=r
+  
+            if r is None: 
+                if has_attrs:
+                    for key,val in d[k].items():
+                        if key != "#alldata":
+                            l.append({key:  {'#alldata': [val]}})
+                d[k]=self.merge_tag(l)
+                
         elif n_tag != 0 and n_text !=0: # if [{'content1': {'#alldata': ...},'oui']
             if has_attrs:
                 d[k]["#text"]=self.merge_tag_text(l)
             else:
                 d[k]=self.merge_tag_text(l)
+
+        del self.path2[-1]
+
             
     def try_conversion(self, value):
         if self.to_int:

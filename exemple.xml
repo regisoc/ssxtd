@@ -4,4 +4,9 @@
     <i species = "cheval">
         <count>1.1</count>
     </i>
+	<i>
+        <month>11</month>
+        <year>2011</year>
+        <day>1</day>
+    </i>
 </doc>
