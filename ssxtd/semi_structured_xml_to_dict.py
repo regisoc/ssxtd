@@ -156,18 +156,24 @@ class DictBuilder:
         # if [{'content1': {'#alldata': ...}}, {'content2': {'#alldata': ...}}]
         elif n_tag != 0 and n_text == 0:
 
-            r = None
+            processed = False
             if self.object_processor is not None:
                 r = self.object_processor(self.path2, d[k])
-                if r is not None:
+                if r != d[k]:
                     d[k] = r
+                    try:
+                        d[k]["#alldata"]
+                    except:
+                        processed=True
+                    
 
-            if r is None:
+            if processed is False:
                 if has_attrs:
                     for key, val in d[k].items():
                         if key != "#alldata":
                             l.append({key:  {'#alldata': [val]}})
                 d[k] = self.merge_tag(l)
+
 
         # if [{'content1': {'#alldata': ...},'oui']
         elif n_tag != 0 and n_text != 0:
