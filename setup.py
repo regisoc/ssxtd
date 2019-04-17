@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ssxtd',
-    version='0.1.1',
+    version='0.1.3',
     packages=['ssxtd',],
     license='MIT',
     author='Xavier Godon',
@@ -16,7 +16,7 @@ setuptools.setup(
     long_description=long_description,
     install_requires=[
         "gzip",
-        "zipfile == 0.1.4",
+        "zipfile",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
