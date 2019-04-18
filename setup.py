@@ -5,19 +5,15 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ssxtd',
-    version='0.1.3',
+    version='0.1.4',
     packages=['ssxtd',],
     license='MIT',
     author='Xavier Godon',
     author_email='xavier.godon@protonmail.com',
     scripts=['bin/run_exemple.py',],
     url='https://github.com/xgodon/ssxtd',
-    description='Useful towel-related stuff.',
+    description='semi structured xml to dict',
     long_description=long_description,
-    install_requires=[
-        "gzip",
-        "zipfile",
-    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
