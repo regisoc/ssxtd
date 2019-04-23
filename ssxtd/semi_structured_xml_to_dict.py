@@ -141,16 +141,18 @@ class DictBuilder:
             elif isinstance(i, str):
                 n_text += 1
 
-        if n_text == 1 and n_tag == 0:  # if ['oui']
+        if n_text != 0 and n_tag == 0:  # if ['oui']
+            content=""
+            for i in l:
+                content=content+i
             if self.value_processor is not None:
-                r = self.value_processor(l[0])
+                r = self.value_processor(content)
             else:
-                r = l[0]
+                r = content
             if has_attrs:
                 d[k]["#text"] = r
                 d[k].pop("#alldata", None)
             else:
-
                 d[k] = r
 
         # if [{'content1': {'#alldata': ...}}, {'content2': {'#alldata': ...}}]
