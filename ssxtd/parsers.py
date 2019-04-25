@@ -89,13 +89,13 @@ try:
     import xml.etree.ElementTree as OET
 
 
-    def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None):
+    def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         for f1 , f2 in dual_generator(my_file, compression):
             tag  = get_tag_from_file(f1, target_depth=depth, ET=OET)
 
             for event, element in OET.iterparse(f2):
                 if element.tag == tag and event == "end":
-                    parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
+                    parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
 
                     a = OET.tostring(element)
                     tree = OET.fromstring(a, parser)
@@ -103,46 +103,46 @@ try:
                     yield tree[tag]
                     element.clear()
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         for f1 , f2 in dual_generator(my_file, compression):
-            parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
+            parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
             tree = OET.parse(f1, parser)
             tree = tree.getroot()
             l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=OET)
             for i in l:
                 yield i
 except:
-    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         print("xml isn't installed : lxml_iterparse is unavailable")
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         print("xml isn't installed : lxml_parse is unavailable")      
 
 try:
     from lxml import etree as NET
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         for f1 , f2 in dual_generator(my_file, compression):
-            parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
+            parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
             tree = NET.parse(f1, parser)
             l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=NET)
             for i in l:
                 yield i
 
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         for f1 , f2 in dual_generator(my_file, compression):
 
             #parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
             tag  = get_tag_from_file(f1, target_depth=depth, ET=NET)
             for event, element in NET.iterparse(f2, tag=tag):
-                parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
+                parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
                 a = NET.tostring(element).decode('utf-8')
                 tree = NET.fromstring(a, parser)
                 yield tree[tag]
                 element.clear()
 except:
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         print("lxml isn't installed : lxml_iterparse is unavailable")
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         print("lxml isn't installed : lxml_parse is unavailable")

@@ -4,7 +4,7 @@ class DictBuilder:
     calls to a dict.
     """
 
-    def __init__(self, trim_spaces=False, value_processor=None, object_processor=None):
+    def __init__(self, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         """[summary]
         
         Keyword Arguments:
@@ -18,6 +18,7 @@ class DictBuilder:
         self.trim_spaces = trim_spaces
         self.object_processor = object_processor
         self.value_processor = value_processor
+        self.del_empty = del_empty
 
     def getLeaf(self):
         """Used to get the dict of the current path
@@ -230,7 +231,11 @@ class DictBuilder:
                 d[k] = self.merge_tag_text(l)
 
         elif n_tag == 0 and n_text == 0:
-            del d[k]["#alldata"]
+            if has_attrs:
+                del d[k]["#alldata"]
+            elif self.del_empty:
+                del d[k]
+                
 
         del self.path2[-1]
 
