@@ -1,10 +1,17 @@
 class DictBuilder:
     """Generic element structure builder.
     This builder converts a sequence of start, data, and end method
-    calls to a well-formed element structure.
+    calls to a dict.
     """
 
     def __init__(self, trim_spaces=False, value_processor=None, object_processor=None):
+        """[summary]
+        
+        Keyword Arguments:
+            trim_spaces {bool} -- [description] (default: {False})
+            value_processor {[type]} -- [description] (default: {None})
+            object_processor {[type]} -- [description] (default: {None})
+        """
         self.dict = {}
         self.path = []
         self.leaf = {}
@@ -13,7 +20,11 @@ class DictBuilder:
         self.value_processor = value_processor
 
     def getLeaf(self):
-
+        """Used to get the dict of the current path
+        
+        Returns:
+            dict -- the dict of the current path
+        """
         leaf = self.dict
         for i in self.path:
             l = leaf["#alldata"]
@@ -23,6 +34,11 @@ class DictBuilder:
         return leaf
 
     def getParentLeaf(self):
+        """Used to get the parent dict of the current path
+        
+        Returns:
+            dict -- the dict of the current path-1
+        """
         leaf = self.dict
         for i in self.path[:-1]:
             l = leaf["#alldata"]
@@ -31,26 +47,23 @@ class DictBuilder:
 
         return leaf
 
-    def remove_tag_all_data(self, d):
-
-        if isinstance(d, list):
-            for i in d:
-                self.remove_tag_all_data(i)
-        elif isinstance(d, str):
-            return
-        elif isinstance(d, dict):
-            d.pop("#alldata", None)
-
-            for i in d:
-                self.remove_tag_all_data(i)
-
     def close(self):
+        """called at the end of the parsing
+        
+        Returns:
+            dict -- the dict corresponding to the data parsed
+        """
         root = self.dict["#alldata"][0]
         self.path2 = []
         self.clean(root)
         return root
 
     def data(self, data):
+        """called when data is encountered during parsing
+        
+        Arguments:
+            data {string} -- text between tags
+        """        
         if data.isspace():
             return
         if self.trim_spaces:
@@ -59,7 +72,12 @@ class DictBuilder:
         self.leaf["#alldata"].append(data)
 
     def start(self, tag, attrs):
-        # print(self.dict)
+        """called when a new tag is encountered during parsing
+        
+        Arguments:
+            tag {string} -- the tag name
+            attrs {[type]} -- [description]
+        """
         self.leaf = self.getLeaf()
         if self.leaf.get("#alldata") is None:
             self.leaf["#alldata"] = []
@@ -73,13 +91,23 @@ class DictBuilder:
         self.path.append(tag)
 
     def merge_tag_text(self, o):
+        """called when merging mixed tag and text
+        
+        Arguments:
+            o {object} -- something we want to transform into a string
+        
+        Returns:
+            string -- the transformed object
+        """
         r = ""
         if isinstance(o, list):
             for i in o:
                 r = r+self.merge_tag_text(i)
         elif isinstance(o, str):
+            #TODO : r=o ?
             r = r+o
         elif isinstance(o, (int, float)):
+            #TODO : r=str(o) ?
             r = r+str(o)
         elif isinstance(o, dict):
             if o.get("#alldata") is None:
@@ -90,20 +118,33 @@ class DictBuilder:
         return r
 
     def add_tag(self, d, k, v):
+        """add a subdict (the tag) in a dict
+        
+        Arguments:
+            d {dict} -- element in which we want to add a tag
+            k {string} -- tag name
+            v {?} -- content of the tag
+        """
         t = d.get(k)
 
+        # if tag didn't exist, create it
         if t is None:
             d[k] = v
+        # if tag existed, and was a single value, transform it into a list
         elif isinstance(t, (int, float, str, dict)):
             d[k] = [d[k], v]
+        # if tag existed and was a list, append the new tag
         elif isinstance(t, list):
             t.append(v)
 
     def merge_tag(self, l):
-        """[summary]
+        """merge a list of tags into a dict
 
         Arguments:
-            l {[type]} -- [{'content1': ...}, {'content2': ...}]
+            l {list} -- [{'content1': ...}, {'content2': ...}]
+
+        Returns:
+            dict -- dict with all the tags
         """
         r = {}
 
@@ -116,7 +157,7 @@ class DictBuilder:
         return r
 
     def clean(self, d):
-        '''[summary]
+        '''transform a dict structured with #alldata into a "normal" dict
 
         Arguments:
             d {[type]} -- {'i': {'#alldata': [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']}}}
@@ -125,16 +166,19 @@ class DictBuilder:
         k = next(iter(d))  # k='i'
         self.path2.append(k)
 
+        # test if tag has attrs
         has_attrs = False
         for i in d[k]:
             if i != "#alldata":
                 has_attrs = True
-        # [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']
+                break
+        # get the list, eg : [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']
         l = d[k]["#alldata"]
 
+        #count number of each component
+        #TODO : true and false instead of count
         n_tag = 0
         n_text = 0
-
         for i in l:
             if isinstance(i, dict):
                 n_tag += 1
@@ -187,4 +231,9 @@ class DictBuilder:
         del self.path2[-1]
 
     def end(self, tag):
+        """called at the end of a tag
+        
+        Arguments:
+            tag {string} -- tag name
+        """
         del self.path[-1]

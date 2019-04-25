@@ -3,6 +3,23 @@ from gzip import GzipFile
 from zipfile import ZipFile
 
 def get_list_from_tree(my_file, target_depth, tree, ET):
+    """get the list of elements situated at a specific depth
+    note  : we could do this with only the tree and not the file, 
+            but, to me, it seemed clearer this way, because share the same algo as get_tag_from_file, 
+            which cannot parse the tree, as it hasn't been created
+    
+    Arguments:
+        my_file {string} -- the file to be parsed so we can get the path of the element of the required depth
+        target_depth {int} -- depth of the elements
+        tree {dict} -- dict from which the list is extracted
+        ET {library} -- library used to parse
+    
+    Raises:
+        Exception: no elements found at the required depth 
+    
+    Returns:
+        [list] -- list of the elements
+    """
     depth=0
     path=[]
     for event, element in ET.iterparse(my_file,events=("end","start")):
@@ -18,9 +35,22 @@ def get_list_from_tree(my_file, target_depth, tree, ET):
             if not isinstance(tree, list):
                 tree=[tree]
             return tree
-    raise Exception
+    raise Exception ("no elements found at the required depth")
 
 def get_tag_from_file(my_file, target_depth, ET):
+    """get the tag's name at the required depth
+    
+    Arguments:
+        my_file {string} -- file to be parsed
+        target_depth {int} -- depth of the tag
+        ET {library} -- library used to parse
+    
+    Raises:
+        Exception: no elements found at the required depth
+    
+    Returns:
+        string -- tag name
+    """
     depth=0
     for event, element in ET.iterparse(my_file,events=("end","start")):
         if event == "start":
@@ -29,27 +59,31 @@ def get_tag_from_file(my_file, target_depth, ET):
             depth-=1
         if depth == target_depth:
             return element.tag
-    raise Exception
+    raise Exception("no elements found at the required depth")
 
     
 def dual_generator(filename, compression):
-        NO_COMPRESS = None
-        GZIP = 'gz'
-        ZIP = 'zip'
+    """return readable files, return 2x the same file because we need to parse 2 times and virtual files can't be parsed 2x
+    
+    Arguments:
+        filename {string} -- file to parse
+        compression {string} -- file type
+    """
+    NO_COMPRESS = None
+    GZIP = 'gz'
+    ZIP = 'zip'
 
-        if compression is NO_COMPRESS:  # xml file
-            yield filename, filename
-        elif compression is GZIP:  # GZIP file
-            yield GzipFile(filename), GzipFile(filename)
-        elif compression is ZIP:  # ZIP file
-            with ZipFile(filename, 'r') as zf:
-                for name in zf.namelist():
-                    if name.endswith('/'):
-                        continue
-                    if name.endswith('.xml'):
-                        with zf.open(name) as zxml:
-                            yield zxml, zxml
-                        break
+    if compression is NO_COMPRESS:  # xml file
+        yield filename, filename
+    elif compression is GZIP:  # GZIP file
+        yield GzipFile(filename), GzipFile(filename)
+    elif compression is ZIP:  # ZIP file
+        with ZipFile(filename, 'r') as zf:
+            for name in zf.namelist():
+                if name.endswith('/'):
+                    continue
+                if name.endswith('.xml'):
+                    yield zf.open(name), zf.open(name)
 
 try:
     import xml.etree.ElementTree as OET
