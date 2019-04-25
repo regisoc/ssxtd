@@ -57,6 +57,8 @@ class DictBuilder:
         root = self.dict["#alldata"][0]
         self.path2 = []
         self.clean(root)
+        if root[next(iter(root))]=={} and self.del_empty:
+            return None
         return root
 
     def data(self, data):
@@ -153,8 +155,11 @@ class DictBuilder:
             # i : 'content1': ...
             self.clean(i)
             for k, v in i.items():
-                self.add_tag(r, k, v)
-
+                if self.del_empty and v == {}:
+                    continue
+                else: 
+                    self.add_tag(r, k, v)
+        
         return r
 
     def clean(self, d):
@@ -235,7 +240,6 @@ class DictBuilder:
                 del d[k]["#alldata"]
             elif self.del_empty:
                 del d[k]
-                
 
         del self.path2[-1]
 

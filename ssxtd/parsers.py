@@ -31,7 +31,11 @@ def get_list_from_tree(my_file, target_depth, tree, ET):
             path = path[:-1]
         if depth == target_depth:
             for i in path:
-                tree = tree[i]
+                
+                try:
+                    tree = tree[i]
+                except:
+                    return [None]
             if not isinstance(tree, list):
                 tree=[tree]
             return tree

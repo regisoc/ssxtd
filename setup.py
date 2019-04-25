@@ -5,12 +5,11 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ssxtd',
-    version='0.1.7',
+    version='0.1.9',
     packages=['ssxtd',],
     license='MIT',
     author='Xavier Godon',
     author_email='xavier.godon@protonmail.com',
-    scripts=['bin/exemple_with_processors.py',],
     url='https://github.com/xgodon/ssxtd',
     description='semi structured xml to dict',
     long_description=long_description,
