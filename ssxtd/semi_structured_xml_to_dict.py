@@ -162,7 +162,6 @@ class DictBuilder:
         Arguments:
             d {[type]} -- {'i': {'#alldata': [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']}}}
         '''
-
         k = next(iter(d))  # k='i'
         self.path2.append(k)
 
@@ -225,8 +224,13 @@ class DictBuilder:
         elif n_tag != 0 and n_text != 0:
             if has_attrs:
                 d[k]["#text"] = self.merge_tag_text(l)
+                del d[k]["#alldata"]
+
             else:
                 d[k] = self.merge_tag_text(l)
+
+        elif n_tag == 0 and n_text == 0:
+            del d[k]["#alldata"]
 
         del self.path2[-1]
 
