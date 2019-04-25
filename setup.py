@@ -10,7 +10,7 @@ setuptools.setup(
     license='MIT',
     author='Xavier Godon',
     author_email='xavier.godon@protonmail.com',
-    scripts=['bin/run_exemple.py',],
+    scripts=['bin/exemple_with_processors.py',],
     url='https://github.com/xgodon/ssxtd',
     description='semi structured xml to dict',
     long_description=long_description,
