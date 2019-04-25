@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ssxtd',
-    version='0.1.5',
+    version='0.1.6',
     packages=['ssxtd',],
     license='MIT',
     author='Xavier Godon',
