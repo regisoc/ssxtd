@@ -1,4 +1,4 @@
-from .semi_structured_xml_to_dict import DictBuilder
+from ssxtd.semi_structured_xml_to_dict import DictBuilder
 from gzip import GzipFile
 from zipfile import ZipFile
 import io
@@ -101,7 +101,7 @@ try:
 
     def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         if depth == 0:
-            Exception ("Depth must be > 0 for iterparse")
+            raise Exception ("Depth must be > 0 for iterparse")
         for f1  in file_generator(my_file, compression):
             tag  = get_tag_from_file(f1, target_depth=depth, ET=OET)
             if isinstance(f1, (io.BytesIO, GzipFile)):
@@ -150,7 +150,7 @@ try:
 
     def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
         if depth == 0:
-            Exception ("Depth must be > 0 for iterparse")
+            raise Exception ("Depth must be > 0 for iterparse")
         for f1  in file_generator(my_file, compression):
             #parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
             tag  = get_tag_from_file(f1, target_depth=depth, ET=NET)
