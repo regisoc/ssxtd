@@ -1,6 +1,7 @@
-from ssxtd.semi_structured_xml_to_dict import DictBuilder
+from semi_structured_xml_to_dict import DictBuilder
 from gzip import GzipFile
 from zipfile import ZipFile
+from bs4 import BeautifulSoup
 import io
 
 def get_list_from_tree(my_file, target_depth, tree, ET):
@@ -100,6 +101,22 @@ try:
 
 
     def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+        """parse by iteration, can't recover on bad XML
+        
+        Arguments:
+            my_file {[type]} -- [description]
+        
+        Keyword Arguments:
+            depth {int} -- [description] (default: {2})
+            compression {[type]} -- [description] (default: {None})
+            value_processor {[type]} -- [description] (default: {None})
+            object_processor {[type]} -- [description] (default: {None})
+            trim_spaces {bool} -- [description] (default: {False})
+            del_empty {bool} -- [description] (default: {True})
+        
+        Raises:
+            Exception: [description]
+        """
         if depth == 0:
             raise Exception ("Depth must be > 0 for iterparse")
         for f1  in file_generator(my_file, compression):
@@ -116,11 +133,13 @@ try:
                     yield tree[tag]
                     element.clear()
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         for f1  in file_generator(my_file, compression):
             parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
+            if recover:
+                f1 = io.BytesIO(BeautifulSoup(f1, "html.parser").encode('utf-8'))
             tree = OET.parse(f1, parser)
             if isinstance(f1, (io.BytesIO, GzipFile)):
                             f1.seek(0)
@@ -129,18 +148,18 @@ try:
             for i in l:
                 yield i
 except:
-    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         print("xml isn't installed : xml_iterparse is unavailable")
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         print("xml isn't installed : xml_parse is unavailable")      
 
 try:
     from lxml import etree as NET
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         for f1  in file_generator(my_file, compression):
-            parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
+            parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
             tree = NET.parse(f1, parser)
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
@@ -148,7 +167,7 @@ try:
             for i in l:
                 yield i
 
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         if depth == 0:
             raise Exception ("Depth must be > 0 for iterparse")
         for f1  in file_generator(my_file, compression):
@@ -156,15 +175,15 @@ try:
             tag  = get_tag_from_file(f1, target_depth=depth, ET=NET)
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
-            for event, element in NET.iterparse(f1, tag=tag):
-                parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
+            for event, element in NET.iterparse(f1, tag=tag, recover=recover):
+                parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty))
                 a = NET.tostring(element).decode('utf-8')
                 tree = NET.fromstring(a, parser)
                 yield tree[tag]
                 element.clear()
 except:
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         print("lxml isn't installed : lxml_iterparse is unavailable")
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, recover=False):
         print("lxml isn't installed : lxml_parse is unavailable")

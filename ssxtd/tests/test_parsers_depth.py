@@ -10,8 +10,7 @@ my_depth = 0
 def test_lxml_parse_rf():
     f=real_file
     d=next(parsers.lxml_parse(f, depth=my_depth, compression=None))
-    print(d)
-    assert {'animals': {'i': 'John'}}
+    assert d == {'animals': {'i': 'John'}}
 
 def test_lxml_iterparse_rf():
     with pytest.raises(Exception) as e_info:

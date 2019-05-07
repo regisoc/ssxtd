@@ -7,7 +7,7 @@ def gen_data( to_int=False):
         lf = len(file_list)
         print("\nExtracting records from files\n")
         
-        for i, filepath in enumerate(file_list[359:]):
+        for i, filepath in enumerate(file_list[834:]):
             print('[{}/{}] Reading: {}'.format(i + 1, lf, filepath))
             yield from parsers.lxml_parse(filepath, depth=2, compression="gz", value_processor=None, object_processor=None)
 
