@@ -207,6 +207,7 @@ class DictBuilder:
         # if [{'content1': {'#alldata': ...}}, {'content2': {'#alldata': ...}}]
         elif n_tag != 0 and n_text == 0:
 
+            # processed means replacing #alldata by a value
             processed = False
             if self.object_processor is not None:
                 r = self.object_processor(self.path2, d[k])
@@ -219,6 +220,8 @@ class DictBuilder:
                     
 
             if processed is False:
+                # reassign because maybe it has changed
+                l = d[k]["#alldata"]
                 if has_attrs:
                     for key, val in d[k].items():
                         if key != "#alldata":
