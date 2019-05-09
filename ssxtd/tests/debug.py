@@ -1,6 +1,6 @@
 import glob
 import json
-from ssxtd import parsers
+import parsers
 
 def gen_data( to_int=False):
         file_list = glob.glob("/tmp/lucan/xsp/data/*.gz")

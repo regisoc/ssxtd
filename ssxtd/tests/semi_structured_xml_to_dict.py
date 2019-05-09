@@ -1,10 +1,12 @@
+import re
+
 class DictBuilder:
     """Generic element structure builder.
     This builder converts a sequence of start, data, and end method
     calls to a dict.
     """
 
-    def __init__(self, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True):
+    def __init__(self, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True):
         """[summary]
         
         Keyword Arguments:
@@ -19,6 +21,7 @@ class DictBuilder:
         self.object_processor = object_processor
         self.value_processor = value_processor
         self.del_empty = del_empty
+        self.cleanup_namespaces = cleanup_namespaces
 
     def getLeaf(self):
         """Used to get the dict of the current path
@@ -81,6 +84,8 @@ class DictBuilder:
             tag {string} -- the tag name
             attrs {[type]} -- [description]
         """
+        if self.cleanup_namespaces:
+            tag =  re.sub('{.*}', '', tag)
         self.leaf = self.getLeaf()
         if self.leaf.get("#alldata") is None:
             self.leaf["#alldata"] = []
