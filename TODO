@@ -1,0 +1,37 @@
+implement defusedxml
+
+    Attack vectors
+
+        billion laughs / exponential entity expansion
+        quadratic blowup entity expansion
+        external entity expansion (remote)
+        external entity expansion (local file)
+        DTD retrieval
+
+
+
+    How to avoid XML vulnerabilities
+    Best practices
+
+        Don’t allow DTDs
+        Don’t expand entities
+        Don’t resolve externals
+        Limit parse depth
+        Limit total input size
+        Limit parse time
+        Favor a SAX or iterparse-like parser for potential large data
+        Validate and properly quote arguments to XSL transformations and XPath queries
+        Don’t use XPath expression from untrusted sources
+        Don’t apply XSL transformations that come untrusted sources
+
+    (based on Brad Hill’s Attacking XML Security)
+    https://www.isecpartners.com/media/12976/iSEC-HILL-Attacking-XML-Security-bh07.pdf
+
+
+    compare 
+    b = BytesIO(a)
+                    tree = DET.parse(b, parser)
+    and
+    tree = OET.fromstring(a, parser)
+
+    implement defuselxml

@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 import io
 import re
 import copy 
+from io import BytesIO
+
 
 def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True):
     """get the list of elements situated at a specific depth
@@ -103,7 +105,7 @@ def file_generator(filename, compression):
                     yield zf.open(name), zf.open(name)
 
 
-
+### XML
 try:
     import xml.etree.ElementTree as OET
 
@@ -167,6 +169,74 @@ except:
     def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
         print("xml isn't installed : xml_parse is unavailable")      
 
+## DEFUSE XML
+
+try:
+    import defusedxml.ElementTree as DET
+
+
+    def dxml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True):
+        """parse by iteration, can't recover on bad XML
+        
+        Arguments:
+            my_file {[type]} -- [description]
+        
+        Keyword Arguments:
+            depth {int} -- [description] (default: {2})
+            compression {[type]} -- [description] (default: {None})
+            value_processor {[type]} -- [description] (default: {None})
+            object_processor {[type]} -- [description] (default: {None})
+            trim_spaces {bool} -- [description] (default: {False})
+            del_empty {bool} -- [description] (default: {True})
+        
+        Raises:
+            Exception: [description]
+        """
+        if depth == 0:
+            raise Exception ("Depth must be > 0 for iterparse")
+        for f1, f2  in file_generator(my_file, compression):
+            tag  = get_tag_from_file(f1, target_depth=depth, ET=DET)
+            if isinstance(f1, (io.BytesIO, GzipFile)):
+                f1.seek(0)
+            if cleanup_namespaces:
+                cleaned_tag = re.sub('{.*}', '', tag)
+            else:
+                cleaned_tag = tag
+            for event, element in DET.iterparse(f2):
+                # TODO : remove end condition
+                if element.tag == tag and event == "end":
+                    parser = DET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
+
+                    a = DET.tostring(element)
+                    b = BytesIO(a)
+                    tree = DET.parse(b, parser)
+                    root = tree.getroot()
+                    yield root[cleaned_tag]
+                    element.clear()
+
+    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+        for f1, f2  in file_generator(my_file, compression):
+            parser = DET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
+            if isinstance(f1, (io.BytesIO, GzipFile)):
+                f1.seek(0)
+            if recover:
+                f1 = io.BytesIO(BeautifulSoup(f1, "html.parser").encode('utf-8'))
+            tree = DET.parse(f1, parser)
+            if isinstance(f1, (io.BytesIO, GzipFile)):
+                            f1.seek(0)
+            tree = tree.getroot()
+            l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=DET, cleanup_namespaces=cleanup_namespaces)
+            for i in l:
+                yield i
+except:
+    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+        print("xml isn't installed : xml_iterparse is unavailable")
+
+    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+        print("xml isn't installed : xml_parse is unavailable")      
+
+
+## LXML
 try:
     from lxml import etree as NET
 
