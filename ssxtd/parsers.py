@@ -193,8 +193,6 @@ try:
                 cleaned_tag = re.sub('{.*}', '', tag)
             else:
                 cleaned_tag = tag
-            print("TAG : " + cleaned_tag)
-            print(type(f1))
             # TODO : make an element parser so tostring isn't needed anymore
             for event, element in NET.iterparse(f2, tag=tag, recover=recover):
                 parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
