@@ -1,13 +1,16 @@
 import parsers
 from io import BytesIO
 
-virtual_file = BytesIO('''
+def get_virtual_file():
+    return BytesIO('''
 <animals>
     <i>John</i>
 </animals>
 '''.encode('utf-8'))
+
 real_file = "t.xml"
-compressed_file = "t.xml.gz"
+gz_file = "t.xml.gz"
+zip_file = "t.zip"
 
 my_depth = 1
 
@@ -25,23 +28,33 @@ def test_lxml_iterparse_rf():
     assert d == {'i': 'John'}
 
 def test_lxml_parse_vf():
-    f=virtual_file
+    f=get_virtual_file()
     d=next(parsers.lxml_parse(f, depth=my_depth, compression=None))
     assert d == {'i': 'John'}
 
 def test_lxml_iterparse_vf():
-    f=virtual_file
+    f=get_virtual_file()
     d=next(parsers.lxml_iterparse(f, depth=my_depth, compression=None))
     assert d == {'i': 'John'}
 
 def test_lxml_parse_gz():
-    f=compressed_file
+    f=gz_file
     d=next(parsers.lxml_parse(f, depth=my_depth, compression="gz"))
     assert d == {'i': 'John'}
 
 def test_lxml_iterparse_gz():
-    f=compressed_file
+    f=gz_file
     d=next(parsers.lxml_iterparse(f, depth=my_depth, compression="gz"))
+    assert d == {'i': 'John'}
+
+def test_lxml_parse_zip():
+    f=zip_file
+    d=next(parsers.lxml_parse(f, depth=my_depth, compression="zip"))
+    assert d == {'i': 'John'}
+
+def test_lxml_iterparse_zip():
+    f=zip_file
+    d=next(parsers.lxml_iterparse(f, depth=my_depth, compression="zip"))
     assert d == {'i': 'John'}
 
 # XML
@@ -57,22 +70,31 @@ def test_xml_iterparse_rf():
     assert d == {'i': 'John'}
 
 def test_xml_parse_vf():
-    f=virtual_file
+    f=get_virtual_file()
     d=next(parsers.xml_parse(f, depth=my_depth, compression=None))
     assert d == {'i': 'John'}
 
 def test_xml_iterparse_vf():
-    f=virtual_file
+    f=get_virtual_file()
     d=next(parsers.xml_iterparse(f, depth=my_depth, compression=None))
     assert d == {'i': 'John'}
 
 def test_xml_parse_gz():
-    f=compressed_file
+    f=gz_file
     d=next(parsers.xml_parse(f, depth=my_depth, compression="gz"))
     assert d == {'i': 'John'}
 
 def test_xml_iterparse_gz():
-    f=compressed_file
+    f=gz_file
     d=next(parsers.xml_iterparse(f, depth=my_depth, compression="gz"))
     assert d == {'i': 'John'}
 
+def test_xml_parse_zip():
+    f=zip_file
+    d=next(parsers.lxml_parse(f, depth=my_depth, compression="zip"))
+    assert d == {'i': 'John'}
+
+def test_xml_iterparse_zip():
+    f=zip_file
+    d=next(parsers.lxml_iterparse(f, depth=my_depth, compression="zip"))
+    assert d == {'i': 'John'}

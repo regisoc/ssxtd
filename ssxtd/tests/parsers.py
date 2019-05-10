@@ -4,6 +4,7 @@ from zipfile import ZipFile
 from bs4 import BeautifulSoup
 import io
 import re
+import copy 
 
 def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True):
     """get the list of elements situated at a specific depth
@@ -79,7 +80,7 @@ def get_tag_from_file(my_file, target_depth, ET):
 
     
 def file_generator(filename, compression):
-    """return readable files, return 2x the same file because we need to parse 2 times and virtual files can't be parsed 2x
+    """return readable files, return 2x the same file because we need to parse 2 times and ZipFile can't support seek(0)
     
     Arguments:
         filename {string} -- file to parse
@@ -90,16 +91,18 @@ def file_generator(filename, compression):
     ZIP = 'zip'
 
     if compression is NO_COMPRESS:  # xml file
-        yield filename
+        yield filename, filename
     elif compression is GZIP:  # GZIP file
-        yield GzipFile(filename)
+        yield GzipFile(filename), GzipFile(filename)
     elif compression is ZIP:  # ZIP file
         with ZipFile(filename, 'r') as zf:
             for name in zf.namelist():
                 if name.endswith('/'):
                     continue
                 if name.endswith('.xml'):
-                    yield zf.open(name)
+                    yield zf.open(name), zf.open(name)
+
+
 
 try:
     import xml.etree.ElementTree as OET
@@ -124,7 +127,7 @@ try:
         """
         if depth == 0:
             raise Exception ("Depth must be > 0 for iterparse")
-        for f1  in file_generator(my_file, compression):
+        for f1, f2  in file_generator(my_file, compression):
             tag  = get_tag_from_file(f1, target_depth=depth, ET=OET)
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
@@ -132,7 +135,7 @@ try:
                 cleaned_tag = re.sub('{.*}', '', tag)
             else:
                 cleaned_tag = tag
-            for event, element in OET.iterparse(f1):
+            for event, element in OET.iterparse(f2):
                 # TODO : remove end condition
                 if element.tag == tag and event == "end":
                     parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
@@ -144,7 +147,7 @@ try:
                     element.clear()
 
     def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
-        for f1  in file_generator(my_file, compression):
+        for f1, f2  in file_generator(my_file, compression):
             parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
@@ -154,7 +157,7 @@ try:
             if isinstance(f1, (io.BytesIO, GzipFile)):
                             f1.seek(0)
             tree = tree.getroot()
-            l = get_list_from_tree(f1, target_depth=depth, tree=tree, ET=OET, cleanup_namespaces=cleanup_namespaces)
+            l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=OET, cleanup_namespaces=cleanup_namespaces)
             for i in l:
                 yield i
 except:
@@ -168,19 +171,19 @@ try:
     from lxml import etree as NET
 
     def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
-        for f1  in file_generator(my_file, compression):
+        for f1, f2  in file_generator(my_file, compression):
             parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
             tree = NET.parse(f1, parser)
             if isinstance(f1, (io.BytesIO, GzipFile)):
                 f1.seek(0)
-            l = get_list_from_tree(f1, target_depth=depth, tree=tree, ET=NET, cleanup_namespaces=cleanup_namespaces)
+            l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=NET, cleanup_namespaces=cleanup_namespaces)
             for i in l:
                 yield i
 
     def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
         if depth == 0:
             raise Exception ("Depth must be > 0 for iterparse")
-        for f1  in file_generator(my_file, compression):
+        for f1, f2  in file_generator(my_file, compression):
             #parser = NET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor))
             tag  = get_tag_from_file(f1, target_depth=depth, ET=NET)
             if isinstance(f1, (io.BytesIO, GzipFile)):
@@ -190,9 +193,10 @@ try:
                 cleaned_tag = re.sub('{.*}', '', tag)
             else:
                 cleaned_tag = tag
-
+            print("TAG : " + cleaned_tag)
+            print(type(f1))
             # TODO : make an element parser so tostring isn't needed anymore
-            for event, element in NET.iterparse(f1, tag=tag, recover=recover):
+            for event, element in NET.iterparse(f2, tag=tag, recover=recover):
                 parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
                 a = NET.tostring(element).decode('utf-8')
                 tree = NET.fromstring(a, parser)
