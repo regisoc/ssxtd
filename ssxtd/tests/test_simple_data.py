@@ -25,7 +25,13 @@ empty_2 = io.BytesIO('''
 </animals>
 '''.encode('utf-8'))
 
-
+self_closing = io.BytesIO('''
+<animals>
+    <i><text></text></i>
+    <i></i>
+    <i>solo</i>
+</animals>
+'''.encode('utf-8'))
 
 
 my_compression = None

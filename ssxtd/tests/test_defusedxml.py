@@ -23,10 +23,10 @@ def test_dxml_parse():
     d = next(parsers.dxml_parse(text_only_1, depth=my_depth, compression=my_compression))
     assert d == 'John the real chicken'
 
-def atest_dxml_iterparse():
+def test_dxml_iterparse():
     text_only_1.seek(0)
     d = next(parsers.dxml_iterparse(text_only_1, depth=my_depth, compression=my_compression))
     assert d == 'John the real chicken'
 
 #test_dxml_parse()
-atest_dxml_iterparse()
+#atest_dxml_iterparse()

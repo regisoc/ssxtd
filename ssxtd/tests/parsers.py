@@ -6,9 +6,11 @@ import io
 import re
 import copy 
 from io import BytesIO
+from tqdm import tqdm
+import os
 
 
-def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True):
+def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True, verbose=False):
     """get the list of elements situated at a specific depth
     note  : we could do this with only the tree and not the file, 
             but, to me, it seemed clearer this way, because share the same algo as get_tag_from_file, 
@@ -93,7 +95,10 @@ def file_generator(filename, compression):
     ZIP = 'zip'
 
     if compression is NO_COMPRESS:  # xml file
-        yield filename, filename
+        if isinstance(filename, str):
+            yield open(filename, "rb"), open(filename, "rb")
+        else:
+            yield filename, filename
     elif compression is GZIP:  # GZIP file
         yield GzipFile(filename), GzipFile(filename)
     elif compression is ZIP:  # ZIP file
@@ -110,7 +115,7 @@ try:
     import xml.etree.ElementTree as OET
 
 
-    def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True):
+    def xml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
         """parse by iteration, can't recover on bad XML
         
         Arguments:
@@ -131,15 +136,21 @@ try:
             raise Exception ("Depth must be > 0 for iterparse")
         for f1, f2  in file_generator(my_file, compression):
             tag  = get_tag_from_file(f1, target_depth=depth, ET=OET)
-            if isinstance(f1, (io.BytesIO, GzipFile)):
-                f1.seek(0)
+            if isinstance(f1, (io.BytesIO, GzipFile, io.BufferedReader)):
+                f1.seek(0, os.SEEK_END)
+                file_size = f1.tell()
+                f1.seek(0) 
+            else:
+                file_size = os.stat(f1).st_size
             if cleanup_namespaces:
                 cleaned_tag = re.sub('{.*}', '', tag)
             else:
                 cleaned_tag = tag
-            for event, element in OET.iterparse(f2):
-                # TODO : remove end condition
-                if element.tag == tag and event == "end":
+            if verbose:
+                old_position = 0
+                pbar = tqdm(total=file_size, unit_scale=True, unit="bytes")
+            for _, element in OET.iterparse(f2):
+                if element.tag == tag:
                     parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
 
                     a = OET.tostring(element)
@@ -147,26 +158,50 @@ try:
 
                     yield tree[cleaned_tag]
                     element.clear()
+                    if verbose:
+                        pbar.update(f2.tell()-old_position)
+                        old_position = f2.tell()
+            if verbose:
+                pbar.close()
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         for f1, f2  in file_generator(my_file, compression):
             parser = OET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
-            if isinstance(f1, (io.BytesIO, GzipFile)):
-                f1.seek(0)
+            if isinstance(f1, (io.BytesIO, GzipFile, io.BufferedReader)):
+                f1.seek(0, os.SEEK_END)
+                file_size = f1.tell()
+                f1.seek(0) 
+            else:
+                file_size = os.stat(f1).st_size
             if recover:
                 f1 = io.BytesIO(BeautifulSoup(f1, "html.parser").encode('utf-8'))
-            tree = OET.parse(f1, parser)
+            if verbose:
+                pbar = tqdm(total=file_size, unit_scale=True, unit="bytes")
+            #tree = OET.parse(f1, parser)
+            while True:
+                data = f1.read(65536)
+                parser.feed(data)
+                if not data:
+                    break
+                elif verbose:
+                    pbar.update(65536)
+            tree = parser.close()
+            if verbose:
+                pbar.close()
             if isinstance(f1, (io.BytesIO, GzipFile)):
                             f1.seek(0)
-            tree = tree.getroot()
+            #tree = tree.getroot()
             l = get_list_from_tree(f2, target_depth=depth, tree=tree, ET=OET, cleanup_namespaces=cleanup_namespaces)
+            if verbose:
+                print("finished parsing, serving")
             for i in l:
                 yield i
+            
 except:
-    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("xml isn't installed : xml_iterparse is unavailable")
 
-    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("xml isn't installed : xml_parse is unavailable")      
 
 ## DEFUSE XML
@@ -175,7 +210,7 @@ try:
     import defusedxml.ElementTree as DET
 
 
-    def dxml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True):
+    def dxml_iterparse(my_file, depth=2,compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
         """parse by iteration, can't recover on bad XML
         
         Arguments:
@@ -203,8 +238,7 @@ try:
             else:
                 cleaned_tag = tag
             for event, element in DET.iterparse(f2):
-                # TODO : remove end condition
-                if element.tag == tag and event == "end":
+                if element.tag == tag:
                     parser = DET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
 
                     a = DET.tostring(element)
@@ -214,7 +248,7 @@ try:
                     yield root[cleaned_tag]
                     element.clear()
 
-    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         for f1, f2  in file_generator(my_file, compression):
             parser = DET.XMLParser(target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
             if isinstance(f1, (io.BytesIO, GzipFile)):
@@ -229,10 +263,10 @@ try:
             for i in l:
                 yield i
 except:
-    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("xml isn't installed : xml_iterparse is unavailable")
 
-    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("xml isn't installed : xml_parse is unavailable")      
 
 
@@ -240,7 +274,7 @@ except:
 try:
     from lxml import etree as NET
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         for f1, f2  in file_generator(my_file, compression):
             parser = NET.XMLParser(recover=recover, target=DictBuilder(value_processor=value_processor, object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces))
             tree = NET.parse(f1, parser)
@@ -250,7 +284,7 @@ try:
             for i in l:
                 yield i
 
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         if depth == 0:
             raise Exception ("Depth must be > 0 for iterparse")
         for f1, f2  in file_generator(my_file, compression):
@@ -273,8 +307,9 @@ try:
 
             
 except:
-    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("lxml isn't installed : lxml_iterparse is unavailable")
 
-    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, recover=False):
+    def lxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         print("lxml isn't installed : lxml_parse is unavailable")
+
