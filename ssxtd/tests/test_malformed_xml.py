@@ -34,7 +34,7 @@ def test_xml_parse():
 def test_xml_iterparse():
     f1.seek(0)
     with pytest.raises(Exception) as e_info:
-        d = next(parsers.xml_iterparse(f, depth=my_depth, compression=None, recover=True))
+        d = next(parsers.xml_iterparse(f1, depth=my_depth, compression=None, recover=True))
 
 f2 = BytesIO('''
 <animals>
@@ -71,3 +71,4 @@ def test_xml_iterparse_2():
         d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True, trim_spaces=True ))
 
 
+test_xml_parse()
