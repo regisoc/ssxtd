@@ -69,6 +69,3 @@ def test_xml_iterparse_2():
     f2.seek(0)
     with pytest.raises(Exception) as e_info:
         d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True, trim_spaces=True ))
-
-
-test_xml_parse()
