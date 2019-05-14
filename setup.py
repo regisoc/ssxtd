@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ssxtd',
-    version='1.0.3',
+    version='1.0.4',
     packages=['ssxtd',],
     license='MIT',
     author='Xavier Godon',
@@ -13,6 +13,7 @@ setuptools.setup(
     url='https://github.com/xgodon/ssxtd',
     description='semi structured xml to dict',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
