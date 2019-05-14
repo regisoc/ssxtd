@@ -138,14 +138,14 @@ except:
 try:
     import defusedxml.ElementTree as DET
 
-    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
+    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = DXML_IterParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                     object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                                     object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
     def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = DXML_SimpleParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                       object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                                       object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
 except:
@@ -375,9 +375,9 @@ class DXML_SimpleParser_Manager (SimpleParser_Manager):
 
 
 class DXML_IterParser_Manager (IterParser_Manager):
-    def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
+    def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         super().__init__(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                         object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                         object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = DET
 
 

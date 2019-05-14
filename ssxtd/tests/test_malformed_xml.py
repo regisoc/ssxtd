@@ -11,30 +11,37 @@ my_depth = 1
 
 
 # LXML
-
 def test_lxml_parse():
     f1.seek(0)
     d = next(parsers.lxml_parse(f1, depth=my_depth, compression=None, recover=True, trim_spaces=True))
     assert d == {'i': 'John'}
 
-
 def test_lxml_iterparse():
     f1.seek(0)
     d = next(parsers.lxml_iterparse(f1, depth=my_depth, compression=None, recover=True, trim_spaces=True))
     assert d == {'i': 'John'}
+
 # XML
-
-
 def test_xml_parse():
     f1.seek(0)
     d = next(parsers.xml_parse(f1, depth=my_depth, compression=None, recover=True))
     assert d == {'i': 'John'}
 
-
 def test_xml_iterparse():
     f1.seek(0)
     d = next(parsers.xml_iterparse(f1, depth=my_depth, compression=None, recover=True))
-    print(d)
+    assert d == {'i': 'John'}
+
+# DEFUSEDXML
+def test_dxml_parse():
+    f1.seek(0)
+    d = next(parsers.xml_parse(f1, depth=my_depth, compression=None, recover=True))
+    assert d == {'i': 'John'}
+
+def test_dxml_iterparse():
+    f1.seek(0)
+    d = next(parsers.xml_iterparse(f1, depth=my_depth, compression=None, recover=True))
+    assert d == {'i': 'John'}
 
 f2 = BytesIO('''
 <animals>
@@ -68,6 +75,17 @@ def test_xml_parse_2():
 def test_xml_iterparse_2():
     f2.seek(0)
     d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True, trim_spaces=True ))
+    assert d == {'i': 'John'}
+
+# DEFUSEDXML
+def test_dxml_parse_2():
+    f1.seek(0)
+    d = next(parsers.xml_parse(f2, depth=my_depth, compression=None, recover=True))
+    assert d == {'i': 'John'}
+
+def test_dxml_iterparse_2():
+    f1.seek(0)
+    d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True))
     assert d == {'i': 'John'}
 
 test_xml_iterparse()
