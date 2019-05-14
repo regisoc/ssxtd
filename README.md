@@ -115,6 +115,14 @@ or
 
 to use the defusedxml.ElementTree instead of xml.etree.ElementTree
 
+## Run tests
+
+in the root directory, run :
+`pytest`
+
+for running a single file, you can do :
+`python -c "import ssxtd.tests.test_malformed_xml"`
+
 ## Performances of the parsing functions
 
   lxml_parse :
