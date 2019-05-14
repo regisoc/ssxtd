@@ -1,4 +1,4 @@
-import parsers
+from .. import parsers
 from io import BytesIO
 
 

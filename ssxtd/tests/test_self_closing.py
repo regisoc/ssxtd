@@ -1,7 +1,8 @@
+from .. import parsers
+
 import gzip
 import zlib
 import io
-import parsers
 from io import BytesIO
 import time
 

@@ -2,7 +2,7 @@ import gzip
 import zlib
 import io
 # import parsers
-import parsers
+from .. import parsers
 from io import BytesIO
 
 import time

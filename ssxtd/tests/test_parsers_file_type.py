@@ -1,4 +1,4 @@
-import parsers
+from .. import parsers
 from io import BytesIO
 
 def get_virtual_file():
@@ -8,9 +8,9 @@ def get_virtual_file():
 </animals>
 '''.encode('utf-8'))
 
-real_file = "t.xml"
-gz_file = "t.xml.gz"
-zip_file = "t.zip"
+real_file = "ssxtd/tests/t.xml"
+gz_file = "ssxtd/tests/t.xml.gz"
+zip_file = "ssxtd/tests/t.zip"
 
 my_depth = 1
 

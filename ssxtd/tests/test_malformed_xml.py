@@ -1,4 +1,4 @@
-import parsers
+from .. import parsers
 import pytest
 from io import BytesIO
 

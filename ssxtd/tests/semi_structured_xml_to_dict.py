@@ -8,7 +8,7 @@ class DictBuilder:
 
     def __init__(self, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True):
         """[summary]
-        
+
         Keyword Arguments:
             trim_spaces {bool} -- [description] (default: {False})
             value_processor {[type]} -- [description] (default: {None})
@@ -25,7 +25,7 @@ class DictBuilder:
 
     def getLeaf(self):
         """Used to get the dict of the current path
-        
+
         Returns:
             dict -- the dict of the current path
         """
@@ -39,7 +39,7 @@ class DictBuilder:
 
     def getParentLeaf(self):
         """Used to get the parent dict of the current path
-        
+
         Returns:
             dict -- the dict of the current path-1
         """
@@ -53,23 +53,23 @@ class DictBuilder:
 
     def close(self):
         """called at the end of the parsing
-        
+
         Returns:
             dict -- the dict corresponding to the data parsed
         """
         root = self.dict["#alldata"][0]
         self.path2 = []
         self.clean(root)
-        if root[next(iter(root))]=={} and self.del_empty:
+        if root[next(iter(root))] == {} and self.del_empty:
             return None
         return root
 
     def data(self, data):
         """called when data is encountered during parsing
-        
+
         Arguments:
             data {string} -- text between tags
-        """        
+        """
         if data.isspace():
             return
         if self.trim_spaces:
@@ -79,13 +79,13 @@ class DictBuilder:
 
     def start(self, tag, attrs):
         """called when a new tag is encountered during parsing
-        
+
         Arguments:
             tag {string} -- the tag name
             attrs {[type]} -- [description]
         """
         if self.cleanup_namespaces:
-            tag =  re.sub('{.*}', '', tag)
+            tag = re.sub('{.*}', '', tag)
         self.leaf = self.getLeaf()
         if self.leaf.get("#alldata") is None:
             self.leaf["#alldata"] = []
@@ -100,10 +100,10 @@ class DictBuilder:
 
     def merge_tag_text(self, o):
         """called when merging mixed tag and text
-        
+
         Arguments:
             o {object} -- something we want to transform into a string
-        
+
         Returns:
             string -- the transformed object
         """
@@ -112,10 +112,10 @@ class DictBuilder:
             for i in o:
                 r = r+self.merge_tag_text(i)
         elif isinstance(o, str):
-            #TODO : r=o ?
+            # TODO : r=o ?
             r = r+o
         elif isinstance(o, (int, float)):
-            #TODO : r=str(o) ?
+            # TODO : r=str(o) ?
             r = r+str(o)
         elif isinstance(o, dict):
             if o.get("#alldata") is None:
@@ -127,7 +127,7 @@ class DictBuilder:
 
     def add_tag(self, d, k, v):
         """add a subdict (the tag) in a dict
-        
+
         Arguments:
             d {dict} -- element in which we want to add a tag
             k {string} -- tag name
@@ -162,9 +162,9 @@ class DictBuilder:
             for k, v in i.items():
                 if self.del_empty and v == {}:
                     continue
-                else: 
+                else:
                     self.add_tag(r, k, v)
-        
+
         return r
 
     def clean(self, d):
@@ -185,8 +185,8 @@ class DictBuilder:
         # get the list, eg : [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']
         l = d[k]["#alldata"]
 
-        #count number of each component
-        #TODO : true and false instead of count
+        # count number of each component
+        # TODO : true and false instead of count
         n_tag = 0
         n_text = 0
         for i in l:
@@ -196,9 +196,9 @@ class DictBuilder:
                 n_text += 1
 
         if n_text != 0 and n_tag == 0:  # if ['oui']
-            content=""
+            content = ""
             for i in l:
-                content=content+i
+                content = content+i
             if self.value_processor is not None:
                 r = self.value_processor(content)
             else:
@@ -221,8 +221,7 @@ class DictBuilder:
                     try:
                         d[k]["#alldata"]
                     except:
-                        processed=True
-                    
+                        processed = True
 
             if processed is False:
                 # reassign because maybe it has changed
@@ -232,7 +231,6 @@ class DictBuilder:
                         if key != "#alldata":
                             l.append({key:  {'#alldata': [val]}})
                 d[k] = self.merge_tag(l)
-
 
         # if [{'content1': {'#alldata': ...},'oui']
         elif n_tag != 0 and n_text != 0:
@@ -253,7 +251,7 @@ class DictBuilder:
 
     def end(self, tag):
         """called at the end of a tag
-        
+
         Arguments:
             tag {string} -- tag name
         """

@@ -1,4 +1,5 @@
 from semi_structured_xml_to_dict import DictBuilder
+
 from gzip import GzipFile
 from zipfile import ZipFile, ZipExtFile
 from bs4 import BeautifulSoup
@@ -30,7 +31,7 @@ def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True,
     """
     depth = 0
     path = []
-    if isinstance(my_file, io.BytesIO):
+    if isinstance(my_file, BytesIO):
         my_file.seek(0)
     for event, element in ET.iterparse(my_file, events=("end", "start")):
         if cleanup_namespaces:
@@ -71,7 +72,7 @@ def get_tag_from_file(my_file, target_depth, ET):
         string -- tag name
     """
     depth = 0
-    if isinstance(my_file, io.BytesIO):
+    if isinstance(my_file, BytesIO):
         my_file.seek(0)
     for event, element in ET.iterparse(my_file, events=("end", "start")):
         if event == "start":
@@ -96,18 +97,18 @@ def file_generator(filename, compression):
 
     if compression is NO_COMPRESS:  # xml file
         if isinstance(filename, str):
-            yield open(filename, "rb"), open(filename, "rb")
+            yield open(filename, "rb")
         else:
-            yield filename, filename
+            yield filename
     elif compression is GZIP:  # GZIP file
-        yield GzipFile(filename), GzipFile(filename)
+        yield GzipFile(filename)
     elif compression is ZIP:  # ZIP file
         with ZipFile(filename, 'r') as zf:
             for name in zf.namelist():
                 if name.endswith('/'):
                     continue
                 if name.endswith('.xml'):
-                    yield zf.open(name, mode='r'), zf.open(name, mode='r')
+                    yield zf.open(name, mode='r')
 
 
 # XML
@@ -137,14 +138,14 @@ except:
 try:
     import defusedxml.ElementTree as DET
 
-    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
+    def dxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = DXML_IterParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                     object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                                     object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
     def dxml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = DXML_SimpleParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                       object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                                       object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
 except:
@@ -163,12 +164,10 @@ try:
                                        object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
-
     def lxml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = LXML_IterParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                       object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
+                                     object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
-        
 
 
 except:
@@ -202,7 +201,6 @@ class Parser_Manager:
         self.lib = None
         self.tag = ""
         self.f1 = None
-        self.f2 = None
         self.file_size = None
         self.cleaned_tag = ""
         self.pbar = None
@@ -210,12 +208,15 @@ class Parser_Manager:
     def check_depth(self):
         if self.depth == 0 and self.type == Parser_Manager.ITER:
             raise Exception("Depth must be > 0 for iterparse")
+        if self.depth < 0:
+            raise Exception("Depth can't be < 0")
 
     def set_tag(self):
-        self.tag = get_tag_from_file(self.f1, target_depth=self.depth, ET=self.lib)
+        self.tag = get_tag_from_file(
+            self.f1, target_depth=self.depth, ET=self.lib)
 
     def set_size(self):
-        if isinstance(self.f1, (io.BytesIO, GzipFile, io.BufferedReader, ZipExtFile)):
+        if isinstance(self.f1, (BytesIO, GzipFile, io.BufferedReader, ZipExtFile)):
             self.f1.seek(0, os.SEEK_END)
             self.file_size = self.f1.tell()
             self.f1.seek(0)
@@ -238,8 +239,6 @@ class Parser_Manager:
         if self.verbose:
             self.pbar.close()
 
-
-
     def run(self):
         raise Exception("run need an implementation")
 
@@ -247,12 +246,22 @@ class Parser_Manager:
         raise Exception("run need an implementation")
 
     def restauration_100(self):
+        if self.lib == NET:
+            # lxml will correct malformed xml
+            return
         if self.recover:
-            self.f1 = io.BytesIO(BeautifulSoup(
+            self.f1 = BytesIO(BeautifulSoup(
                 self.f1, "html.parser").encode('utf-8'))
-            self.f2.seek(0)
-            self.f2 = io.BytesIO(BeautifulSoup(
-                self.f2, "html.parser").encode('utf-8'))
+
+    def get_parser(self):
+        if self.lib == NET:
+            return self.lib.XMLParser(recover=self.recover, target=self.get_dict_builder())
+        else:
+            return self.lib.XMLParser(target=self.get_dict_builder())
+
+    def get_dict_builder(self):
+        return DictBuilder(value_processor=self.value_processor, object_processor=self.object_processor,
+                           trim_spaces=self.trim_spaces, del_empty=self.del_empty, cleanup_namespaces=self.cleanup_namespaces)
 
 
 class IterParser_Manager (Parser_Manager):
@@ -263,9 +272,8 @@ class IterParser_Manager (Parser_Manager):
 
     def run(self):
         self.check_depth()
-        for f1, f2 in file_generator(self.my_file, self.compression):
+        for f1 in file_generator(self.my_file, self.compression):
             self.f1 = f1
-            self.f2 = f2
             self.set_tag()
             self.set_size()
             self.restauration_100()
@@ -275,17 +283,16 @@ class IterParser_Manager (Parser_Manager):
             self.close_pbar()
 
     def parse(self):
-        bd = DictBuilder(value_processor=self.value_processor, object_processor=self.object_processor,
-                                                       trim_spaces=self.trim_spaces, del_empty=self.del_empty, cleanup_namespaces=self.cleanup_namespaces)
-        self.parser = self.lib.XMLParser(target=bd)
-        
-        if self.recover:
-            print("oui")
-            print(self.f2.getvalue().decode("utf-8") )
-        for _, element in self.lib.iterparse(self.f2):
-            yield from self.process(element)
+        self.parser = self.get_parser()
+        self.f1.seek(0)
 
-            
+        if self.lib == NET:
+            for _, element in self.lib.iterparse(self.f1, recover=self.recover):
+                yield from self.process(element)
+        else:
+            for _, element in self.lib.iterparse(self.f1):
+                yield from self.process(element)
+
     def process(self, element):
         if element.tag == self.tag:
             a = self.lib.tostring(element)
@@ -304,11 +311,12 @@ class IterParser_Manager (Parser_Manager):
             yield root[self.cleaned_tag]
             element.clear()
             self.update_pbar()
-        
+
     def update_pbar(self):
         if self.verbose:
-            self.pbar.update(self.f2.tell()-self.old_position)
-            self.old_position = self.f2.tell()
+            self.pbar.update(self.f1.tell()-self.old_position)
+            self.old_position = self.f1.tell()
+
 
 class SimpleParser_Manager (Parser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
@@ -317,9 +325,7 @@ class SimpleParser_Manager (Parser_Manager):
         self.type = Parser_Manager.SIMPLE
 
     def parse(self):
-        parser = self.lib.XMLParser(target=DictBuilder(value_processor=self.value_processor, object_processor=self.object_processor,
-                                                       trim_spaces=self.trim_spaces, del_empty=self.del_empty, cleanup_namespaces=self.cleanup_namespaces))
-
+        parser = self.get_parser()
         while True:
             data = self.f1.read(65536)
             parser.feed(data)
@@ -329,21 +335,17 @@ class SimpleParser_Manager (Parser_Manager):
                 self.pbar.update(65536)
         return parser.close()
 
-
-
     def run(self):
         self.check_depth()
-        for f1, f2 in file_generator(self.my_file, self.compression):
+        for f1 in file_generator(self.my_file, self.compression):
             self.f1 = f1
-            self.f2 = f2
             self.set_size()
             self.restauration_100()
             self.create_pbar
             tree = self.parse()
             self.close_pbar()
-            if isinstance(self.f1, (io.BytesIO, GzipFile)):
-                self.f1.seek(0)
-            l = get_list_from_tree(f2, target_depth=self.depth, tree=tree,
+            self.f1.seek(0)
+            l = get_list_from_tree(f1, target_depth=self.depth, tree=tree,
                                    ET=OET, cleanup_namespaces=self.cleanup_namespaces)
             if self.verbose:
                 print("finished parsing, serving")
@@ -351,14 +353,12 @@ class SimpleParser_Manager (Parser_Manager):
                 yield i
 
 
-
-
-
 class XML_SimpleParser_Manager (SimpleParser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         super().__init__(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor, object_processor=object_processor,
                          trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = OET
+
 
 class XML_IterParser_Manager (IterParser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
@@ -373,11 +373,13 @@ class DXML_SimpleParser_Manager (SimpleParser_Manager):
                          trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = DET
 
+
 class DXML_IterParser_Manager (IterParser_Manager):
-    def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
+    def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         super().__init__(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                         object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                         object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = DET
+
 
 class LXML_SimpleParser_Manager (SimpleParser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
@@ -385,21 +387,9 @@ class LXML_SimpleParser_Manager (SimpleParser_Manager):
                          trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = NET
 
+
 class LXML_IterParser_Manager (IterParser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         super().__init__(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
                          object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         self.lib = NET
-
-    def parse(self):
-        bd = DictBuilder(value_processor=self.value_processor, object_processor=self.object_processor,
-                                                       trim_spaces=self.trim_spaces, del_empty=self.del_empty, cleanup_namespaces=self.cleanup_namespaces)
-
-        self.parser = self.lib.XMLParser(recover=self.recover, target=bd)
-        
-        for _, element in self.lib.iterparse(self.f2, recover=self.recover):
-            
-            yield from self.process(element)
-
-    def restauration_100(self):
-        pass

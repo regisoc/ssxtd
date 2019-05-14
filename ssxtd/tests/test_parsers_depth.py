@@ -1,7 +1,7 @@
-import parsers
+from .. import parsers
 import pytest
 
-real_file = "t.xml"
+real_file = "ssxtd/tests/t.xml"
 my_depth = 0
 
 
