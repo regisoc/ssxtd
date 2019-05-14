@@ -114,9 +114,9 @@ def file_generator(filename, compression):
 try:
     import xml.etree.ElementTree as OET
 
-    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False):
+    def xml_iterparse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
         pm = XML_IterParser_Manager(my_file=my_file, depth=depth, compression=compression, value_processor=value_processor,
-                                    object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose)
+                                    object_processor=object_processor, trim_spaces=trim_spaces, del_empty=del_empty, cleanup_namespaces=cleanup_namespaces, verbose=verbose, recover=recover)
         yield from pm.run()
 
     def xml_parse(my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
@@ -246,6 +246,14 @@ class Parser_Manager:
     def parse(self):
         raise Exception("run need an implementation")
 
+    def restauration_100(self):
+        if self.recover:
+            self.f1 = io.BytesIO(BeautifulSoup(
+                self.f1, "html.parser").encode('utf-8'))
+            self.f2.seek(0)
+            self.f2 = io.BytesIO(BeautifulSoup(
+                self.f2, "html.parser").encode('utf-8'))
+
 
 class IterParser_Manager (Parser_Manager):
     def __init__(self, my_file, depth=2, compression=None, value_processor=None, object_processor=None, trim_spaces=False, del_empty=True, cleanup_namespaces=True, verbose=False, recover=False):
@@ -260,6 +268,7 @@ class IterParser_Manager (Parser_Manager):
             self.f2 = f2
             self.set_tag()
             self.set_size()
+            self.restauration_100()
             self.set_cleaned_tag()
             self.create_pbar
             yield from self.parse()
@@ -270,6 +279,9 @@ class IterParser_Manager (Parser_Manager):
                                                        trim_spaces=self.trim_spaces, del_empty=self.del_empty, cleanup_namespaces=self.cleanup_namespaces)
         self.parser = self.lib.XMLParser(target=bd)
         
+        if self.recover:
+            print("oui")
+            print(self.f2.getvalue().decode("utf-8") )
         for _, element in self.lib.iterparse(self.f2):
             yield from self.process(element)
 
@@ -317,15 +329,15 @@ class SimpleParser_Manager (Parser_Manager):
                 self.pbar.update(65536)
         return parser.close()
 
+
+
     def run(self):
         self.check_depth()
         for f1, f2 in file_generator(self.my_file, self.compression):
             self.f1 = f1
             self.f2 = f2
             self.set_size()
-            if self.recover:
-                self.f1 = io.BytesIO(BeautifulSoup(
-                    self.f1, "html.parser").encode('utf-8'))
+            self.restauration_100()
             self.create_pbar
             tree = self.parse()
             self.close_pbar()
@@ -388,3 +400,6 @@ class LXML_IterParser_Manager (IterParser_Manager):
         for _, element in self.lib.iterparse(self.f2, recover=self.recover):
             
             yield from self.process(element)
+
+    def restauration_100(self):
+        pass
