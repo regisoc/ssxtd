@@ -1,4 +1,4 @@
-from ssxtd.semi_structured_xml_to_dict import DictBuilder
+from ..semi_structured_xml_to_dict import DictBuilder
 import defusedxml.ElementTree as DET
 from io import BytesIO
 
