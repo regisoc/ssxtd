@@ -115,12 +115,26 @@ or
 
 to use the defusedxml.ElementTree instead of xml.etree.ElementTree
 
+## Requirements
+
+### Python
+
+python >= v3.7.0b1
+due to https://github.com/python/cpython/commit/066df4fd454d6ff9be66e80b2a65995b10af174f
+you CAN use older version of pythons ( i tested up to 3.5) but you won't be able to read zip files
+
+### Libs
+
+- bs4
+- tqdm
+
 ## Run tests
 
+install pytest:
+`pip install pytest`
 in the root directory, run :
 `pytest`
-
-for running a single file, you can do :
+for running a single file, place yourself at the root folder and run :
 `python -c "import ssxtd.tests.test_malformed_xml"`
 
 ## Performances of the parsing functions
