@@ -1,11 +1,10 @@
 from .semi_structured_xml_to_dict import DictBuilder
 
 from gzip import GzipFile
-from zipfile import ZipFile, ZipExtFile
+from zipfile import ZipFile
 from bs4 import BeautifulSoup
 import io
 import re
-import copy
 from io import BytesIO
 from tqdm import tqdm
 import os
@@ -31,8 +30,7 @@ def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True,
     """
     depth = 0
     path = []
-    if isinstance(my_file, BytesIO):
-        my_file.seek(0)
+    my_file.seek(0)
     for event, element in ET.iterparse(my_file, events=("end", "start")):
         if cleanup_namespaces:
             tag = re.sub('{.*}', '', element.tag)
@@ -216,13 +214,10 @@ class Parser_Manager:
             self.f1, target_depth=self.depth, ET=self.lib)
 
     def set_size(self):
-        if isinstance(self.f1, (BytesIO, GzipFile, io.BufferedReader, ZipExtFile)):
-            self.f1.seek(0, os.SEEK_END)
-            self.file_size = self.f1.tell()
-            self.f1.seek(0)
-        else:
-            print("should not happend")
-            self.file_size = os.stat(self.f1).st_size
+        #if isinstance(self.f1, (BytesIO, GzipFile, io.BufferedReader, ZipExtFile)):
+        self.f1.seek(0, os.SEEK_END)
+        self.file_size = self.f1.tell()
+        self.f1.seek(0)
 
     def set_cleaned_tag(self):
         if self.cleanup_namespaces:
@@ -283,7 +278,6 @@ class IterParser_Manager (Parser_Manager):
             self.close_pbar()
 
     def parse(self):
-        self.parser = self.get_parser()
         self.f1.seek(0)
 
         if self.lib == NET:
@@ -296,9 +290,10 @@ class IterParser_Manager (Parser_Manager):
     def process(self, element):
         if element.tag == self.tag:
             a = self.lib.tostring(element)
-
+            self.parser = self.get_parser()
             # Solution1 -> ne marche pas pour defusedxml car le parser de fromstring n'est pas pris en compte
-            #root = self.lib.fromstring(a, parser)
+            #root = self.lib.fromstring(a, self.parser)
+          
 
             # Solution 2
             b = BytesIO(a)
