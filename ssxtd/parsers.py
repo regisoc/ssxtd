@@ -92,6 +92,18 @@ def file_generator(filename, compression):
     NO_COMPRESS = None
     GZIP = 'gz'
     ZIP = 'zip'
+    AUTO = 'auto'
+
+    if compression is AUTO:
+        if filename.endswith('.xml'):
+            compression = None
+        elif filename.endswith('.zip'):
+            compression = ZIP
+        elif filename.endswith('.gz'):
+            compression = GZIP
+        else:
+            raise Exception("unknown filetype")
+         
 
     if compression is NO_COMPRESS:  # xml file
         if isinstance(filename, str):

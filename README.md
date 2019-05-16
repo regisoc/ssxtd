@@ -74,8 +74,9 @@ for ZIP and GZIP, you must set the parameter "compression" to either "gz" or "zi
 ```
 parsers.xml_parse(my_file, compression="gz"):
 ```
+you can also set the parameter to "auto", ssxtd will then auto detect the file type from the extension (.xml, .zip, or .gz)
 
-note : atm, in a zip compression mode, only .xml situated at the root of the zip will be read
+note : atm, in a zip compression mode, only .xml files situated at the root of the zip file will be read
 
 ### object_processorr
 
