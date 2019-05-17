@@ -112,11 +112,9 @@ class DictBuilder:
             for i in o:
                 r = r+self.merge_tag_text(i)
         elif isinstance(o, str):
-            # TODO : r=o ?
-            r = r+o
+            return o
         elif isinstance(o, (int, float)):
-            # TODO : r=str(o) ?
-            r = r+str(o)
+            return str(o)
         elif isinstance(o, dict):
             if o.get("#alldata") is None:
                 for v in o.values():
@@ -186,16 +184,15 @@ class DictBuilder:
         l = d[k]["#alldata"]
 
         # count number of each component
-        # TODO : true and false instead of count
-        n_tag = 0
-        n_text = 0
+        tag_presence = False
+        n_text = False
         for i in l:
             if isinstance(i, dict):
-                n_tag += 1
+                tag_presence = True
             elif isinstance(i, str):
-                n_text += 1
+                n_text = True
 
-        if n_text != 0 and n_tag == 0:  # if ['oui']
+        if n_text and not tag_presence:  # if ['oui']
             content = ""
             for i in l:
                 content = content+i
@@ -210,7 +207,7 @@ class DictBuilder:
                 d[k] = r
 
         # if [{'content1': {'#alldata': ...}}, {'content2': {'#alldata': ...}}]
-        elif n_tag != 0 and n_text == 0:
+        elif tag_presence and not n_text:
 
             # processed means replacing #alldata by a value
             processed = False
@@ -233,7 +230,7 @@ class DictBuilder:
                 d[k] = self.merge_tag(l)
 
         # if [{'content1': {'#alldata': ...},'oui']
-        elif n_tag != 0 and n_text != 0:
+        elif tag_presence and n_text :
             if has_attrs:
                 d[k]["#text"] = self.merge_tag_text(l)
                 del d[k]["#alldata"]
@@ -241,7 +238,7 @@ class DictBuilder:
             else:
                 d[k] = self.merge_tag_text(l)
 
-        elif n_tag == 0 and n_text == 0:
+        elif not tag_presence  and not n_text :
             if has_attrs:
                 del d[k]["#alldata"]
             elif self.del_empty:

@@ -301,8 +301,11 @@ class IterParser_Manager (Parser_Manager):
 
     def process(self, element):
         if element.tag == self.tag:
+            # TODO see if i can't directly parse element
             a = self.lib.tostring(element)
+
             self.parser = self.get_parser()
+
             # Solution1 -> ne marche pas pour defusedxml car le parser de fromstring n'est pas pris en compte
             #root = self.lib.fromstring(a, self.parser)
           
