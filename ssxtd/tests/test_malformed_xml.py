@@ -80,12 +80,11 @@ def test_xml_iterparse_2():
 # DEFUSEDXML
 def test_dxml_parse_2():
     f1.seek(0)
-    d = next(parsers.xml_parse(f2, depth=my_depth, compression=None, recover=True))
+    d = next(parsers.xml_parse(f2, depth=my_depth, compression=None, recover=True, trim_spaces=True ))
     assert d == {'i': 'John'}
 
 def test_dxml_iterparse_2():
     f1.seek(0)
-    d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True))
+    d = next(parsers.xml_iterparse(f2, depth=my_depth, compression=None, recover=True, trim_spaces=True ))
     assert d == {'i': 'John'}
 
-test_xml_iterparse()

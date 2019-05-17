@@ -299,26 +299,27 @@ class IterParser_Manager (Parser_Manager):
             for _, element in self.lib.iterparse(self.f1):
                 yield from self.process(element)
 
+    def parse_element(self, db, e):
+
+        db.start(e.tag, e.attrib)
+        #print("tag : " + e.tag)
+        if e.text is not None:
+            db.data(e.text)
+            #print("text : " + e.text)
+        for i in list(e):
+            self.parse_element(db, i)
+
+        db.end(e.tag)
+        if e.tail is not None:
+            #print("tail : " + e.tail)
+            db.data(e.tail)
+            e.tail = None
+
     def process(self, element):
         if element.tag == self.tag:
-            # TODO see if i can't directly parse element
-            a = self.lib.tostring(element)
-
-            self.parser = self.get_parser()
-
-            # Solution1 -> ne marche pas pour defusedxml car le parser de fromstring n'est pas pris en compte
-            #root = self.lib.fromstring(a, self.parser)
-          
-
-            # Solution 2
-            b = BytesIO(a)
-            tree = self.lib.parse(b, self.parser)
-            if self.lib == OET or self.lib == DET:
-                root = tree.getroot()
-            elif self.lib == NET:
-                root = tree
-
-            yield root[self.cleaned_tag]
+            db = self.get_dict_builder()
+            self.parse_element(db, element)
+            yield db.close()[self.cleaned_tag]
             element.clear()
             self.update_pbar()
 

@@ -133,4 +133,4 @@ def test_xml_iterparse_zip():
     d=next(p)
     assert d == 'Jessie'
 
-test_xml_iterparse_rf()
+#test_xml_iterparse_rf()
