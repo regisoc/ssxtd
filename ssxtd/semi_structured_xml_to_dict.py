@@ -183,7 +183,7 @@ class DictBuilder:
         # get the list, eg : [{'content1': {'#alldata': ...}, {'content2': {'#alldata': ...},'oui']
         l = d[k]["#alldata"]
 
-        # count number of each component
+        # check tag and text presence
         tag_presence = False
         n_text = False
         for i in l:
@@ -215,9 +215,7 @@ class DictBuilder:
                 r = self.object_processor(self.path2, d[k])
                 if r != d[k]:
                     d[k] = r
-                    try:
-                        d[k]["#alldata"]
-                    except:
+                    if d[k].get("#alldata") is None:
                         processed = True
 
             if processed is False:
