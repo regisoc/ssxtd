@@ -18,9 +18,9 @@ from datetime import datetime
 result_dir = "./ssxtd/benchmarks/results/"
 working_dir = "/tmp/"
 url = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed19n0001.xml.gz"
-gz_filename = "lucan_test.xml.gz"
-xml_filename = "lucan_test.xml"
-zip_filename = "lucan_test.zip"
+gz_filename = "ssxtd_test.xml.gz"
+xml_filename = "ssxtd_test.xml"
+zip_filename = "ssxtd_test.zip"
 gz_filepath = working_dir + gz_filename
 xml_filepath = working_dir + xml_filename
 zip_filepath = working_dir + zip_filename
@@ -107,7 +107,7 @@ def xml_generation():
     
     for max_size in sizes:
         byte_file = open(xml_filepath, "rb")
-        filename = working_dir + "lucan_test_" + str(max_size) +".xml"
+        filename = working_dir + "ssxtd_test_" + str(max_size) +".xml"
         with open(filename, 'wb') as new_file:
             #new_file.write(b"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             new_file.write(start_tag.encode())
@@ -127,11 +127,6 @@ def xml_generation():
                             break
         print("finished writing "+ str(max_size) + "MB test file")
         
-
-
-# file_list = glob.glob("/tmp/lucan/xsp/data/*")
-# lf = len(file_list)
-
 
 def start():
     memory_limit()
