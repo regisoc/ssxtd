@@ -59,8 +59,11 @@ def get_memory():
         free_memory = 0
         for i in mem:
             sline = i.split()
-            if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+            # https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773
+            #if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+            if str(sline[0]) in ('MemAvailable'):
                 free_memory += int(sline[1])
+            break
     return free_memory * 1024
     
 def gen_data(filepath, function):
@@ -178,7 +181,7 @@ def start():
                     my_file = gz_filepath
                 # size mode
                 else:
-                    my_file = working_dir + "lucan_test_" + str(m) +".xml"
+                    my_file = working_dir + "ssxtd_test_" + str(m) +".xml"
                     m = str(m)+"MB_xml"
 
                 table[0][no_mode+1] = m
