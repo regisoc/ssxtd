@@ -28,14 +28,27 @@ tag = "PubmedArticle"
 start_tag = "<PubmedArticleSet>"
 end_tag = "</PubmedArticleSet>"
 filetype_modes = ["xml", "gz", "zip"]
-sizes = [10, 100, 250,500,750,1000]
+#sizes = [10, 100, 250,500,750,1000]
+sizes = [10,100]
 #sizes = [10]
 #modes = filetype_modes + sizes
-modes = sizes
+
 soft_limit = 0 
-mem_ratio = 0.8
+mem_ratio = 0.7
+functions = [parsers.xml_parse, parsers.xml_iterparse, parsers.lxml_parse, parsers.lxml_iterparse, parsers.dxml_parse, parsers.dxml_iterparse]
+
+# modes var will determine what type of benchmark to run:
+# filetype_mode or sizes, or both!
+
+# modes = filetype_modes
+# modes = filetype_modes + sizes
+modes = sizes
+
+
 
 def memory_limit():
+    """if we don't limit the memory used, the program will be killed
+    """
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     soft_limit = get_memory() * mem_ratio
     print("setting soft mem limit to " + str(soft_limit) + " Bytes")
@@ -64,25 +77,33 @@ def dl_files():
         shutil.copyfileobj(response, out_file)
 
 def gz_extract():
+    """from a gz file extract the xml
+    """
     with gzip.open(gz_filepath, 'rb') as f_in:
         with open(xml_filepath, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
 
 def do_the_zip():
+    """from xml to zip transformation
+    """
     z = zipfile.ZipFile(zip_filepath, "w")
     z.write(xml_filepath)
     z.close
 
 def do_setup():
+    """dl/create files for the benchmark
+    """
     print("setuping the setup\nwaiting 5s before starting")
     time.sleep(5)
-    # dl_files()
-    # gz_extract()
-    # do_the_zip()
+    dl_files()
+    gz_extract()
+    do_the_zip()
     xml_generation()
     print("setuping finished")
 
 def xml_generation():
+    """generate all xml needed for the sizes mode
+    """
     
     for max_size in sizes:
         byte_file = open(xml_filepath, "rb")
@@ -115,7 +136,6 @@ def xml_generation():
 def start():
     memory_limit()
 
-    functions = [parsers.xml_iterparse, parsers.xml_parse, parsers.lxml_parse, parsers.lxml_iterparse, parsers.dxml_parse, parsers.dxml_iterparse]
     
 
     valid = {"yes": True, "y": True, "ye": True,
@@ -193,8 +213,9 @@ def start():
                 date = datetime.today().strftime('%Y-%m-%d')
                 my_csv.write("SSXTD BENCHMARK\n")
                 my_csv.write("start date : " +date+ "\n")
-                my_csv.write("maximum allocated memory (RAM + SWAP) : " + str(get_memory() * mem_ratio /(10 ** 9)) + "GB\n\n")
+                my_csv.write("maximum allocated memory (RAM + SWAP) : " + str(get_memory() * mem_ratio /(10 ** 9)) + "GB\n")
                 my_csv.write("CPU : \n")
+                my_csv.write("ssxtd version : 1.0.8\n\n")
                 csvWriter = csv.writer(my_csv,delimiter=',')
                 csvWriter.writerows(table)
                 my_csv.write("\n\n\n\n")

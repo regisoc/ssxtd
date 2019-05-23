@@ -1,0 +1,65 @@
+SSXTD BENCHMARK
+start date : 2019-05-21
+maximum allocated memory (RAM + SWAP) : 8GB
+CPU : i7 7700HQ
+ssxtd version : 1.0.8
+file benchmarked : https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed19n0001.xml.gz (same file, multiple formats)
+
+parsing_function\parsed_file,xml,gz,zip
+xml_iterparse,37.56028480000168,42.16279835000023,39.137448499999664
+xml_parse,32.76501545000065,36.07715339999959,33.419777400000385
+lxml_parse,37.464776250000796,38.880011499999455,37.046347550000064
+lxml_iterparse,47.04024449999997,45.959421049999946,45.05521540000154
+dxml_parse,41.52063830000043,40.07632935000038,38.88691465000011
+dxml_iterparse,45.195273199999065,44.895784000000276,44.13825424999959
+
+
+
+SSXTD BENCHMARK
+start date : 2019-05-22
+maximum allocated memory (RAM + SWAP) : 5.515744460799999GB
+CPU : i7 7700HQ
+ssxtd version : 1.0.8
+
+parsing_function\parsed_file,10MB_xml,100MB_xml,250MB_xml
+xml_iterparse,2.207328000000416,21.656916649999403,52.91744225000002
+xml_parse,1.8799542500000825,18.092646349999995,45.89385519999996
+lxml_parse,2.0646663999996235,19.729242400000658,50.06179940000038
+lxml_iterparse,2.4455678000012995,25.54906314999971,61.53900059999978
+dxml_parse,2.213620849999643,20.96947949999958,53.646984549999615
+dxml_iterparse,2.411485699998593,23.17862459999924,60.59033070000078
+
+
+
+SSXTD BENCHMARK
+start date : 2019-05-23
+maximum allocated memory (RAM + SWAP) : 5.674008166399999GB
+CPU : i7 7700HQ
+ssxtd version : 1.0.8
+
+parsing_function\parsed_file,1000MB_xml
+xml_iterparse,214.26333700000004
+xml_parse,Memory Exception
+lxml_parse,Memory Exception
+lxml_iterparse,253.3906631000001
+dxml_parse,Memory Exception
+dxml_iterparse,244.62194639999984
+
+
+
+SSXTD BENCHMARK
+start date : 2019-05-23
+maximum allocated memory (RAM + SWAP) : 5.674008166399999GB
+CPU : i7 7700HQ
+ssxtd version : 1.0.8
+
+parsing_function\parsed_file,500MB_xml,750MB_xml
+xml_parse,Memory Exception,Memory Exception
+xml_iterparse,94.22761445000003,149.89299734999997
+lxml_parse,Memory Exception,Memory Exception
+lxml_iterparse,112.93477529999996,179.74671534999993
+dxml_parse,Memory Exception,Memory Exception
+dxml_iterparse,107.92593075000002,178.45301554999992
+
+
+
