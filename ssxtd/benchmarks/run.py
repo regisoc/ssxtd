@@ -61,9 +61,9 @@ def get_memory():
             sline = i.split()
             # https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773
             #if str(sline[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
-            if str(sline[0]) in ('MemAvailable'):
+            if str(sline[0]) == 'MemAvailable:':
                 free_memory += int(sline[1])
-            break
+                break
     return free_memory * 1024
     
 def gen_data(filepath, function):
