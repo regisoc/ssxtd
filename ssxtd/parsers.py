@@ -13,8 +13,7 @@ import os
 def get_list_from_tree(my_file, target_depth, tree, ET, cleanup_namespaces=True, verbose=False):
     """get the list of elements situated at a specific depth
     note  : we could do this with only the tree and not the file, 
-            but, to me, it seemed clearer this way, because share the same algo as get_tag_from_file, 
-            which cannot parse the tree, as it hasn't been created
+            but, to me, it seemed clearer this way.
 
     Arguments:
         my_file {string} -- the file to be parsed so we can get the path of the element of the required depth
@@ -83,7 +82,7 @@ def get_tag_from_file(my_file, target_depth, ET):
 
 
 def file_generator(filename, compression):
-    """return readable files, return 2x the same file because we need to parse 2 times and ZipFile can't support seek(0)
+    """return a seekable file object
 
     Arguments:
         filename {string} -- file to parse
@@ -285,7 +284,7 @@ class IterParser_Manager (Parser_Manager):
             self.set_size()
             self.restauration_100()
             self.set_cleaned_tag()
-            self.create_pbar
+            self.create_pbar()
             yield from self.parse()
             self.close_pbar()
 

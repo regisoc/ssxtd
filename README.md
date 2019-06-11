@@ -14,6 +14,9 @@ Note : ssxtd was created to parse very big files, as a result, the default parsi
 
   ```
   pip install ssxtd
+  ```
+  ```
+  from ssxtd import parsers
   result = next(parsers.xml_parse(my_file, depth=0))
   ```
 
