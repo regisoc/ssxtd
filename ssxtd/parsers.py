@@ -351,7 +351,7 @@ class SimpleParser_Manager (Parser_Manager):
             self.f1 = f1
             self.set_size()
             self.restauration_100()
-            self.create_pbar
+            self.create_pbar()
             tree = self.parse()
             self.close_pbar()
             self.f1.seek(0)
